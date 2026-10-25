@@ -293,61 +293,72 @@
     </div>
   </footer>
 
-  <script>
-    const searchInput = document.getElementById('resourceSearch');
-    const cards = [...document.querySelectorAll('.resource-card')];
-    const filters = [...document.querySelectorAll('.filter')];
-    const emptyState = document.getElementById('emptyState');
-    const clearButton = document.getElementById('clearSearch');
-    const menuButton = document.getElementById('menuBtn');
-    const navLinks = document.getElementById('navLinks');
-    let activeFilter = 'All';
+  
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('resourceSearch');
+  const cards = Array.from(document.querySelectorAll('.resource-card'));
+  const filters = Array.from(document.querySelectorAll('.filter'));
+  const empty = document.getElementById('emptyState');
+  const clear = document.getElementById('clearSearch');
+  let activeFilter = 'All';
 
-    function filterResources() {
-      const query = searchInput.value.trim().toLowerCase();
-      let visibleCount = 0;
-      cards.forEach(card => {
-        const matchesCategory = activeFilter === 'All' || card.dataset.category === activeFilter;
-        const searchable = (card.dataset.search + ' ' + card.innerText).toLowerCase();
-        const matchesQuery = !query || searchable.includes(query);
-        const show = matchesCategory && matchesQuery;
-        card.hidden = !show;
-        if (show) visibleCount++;
+  function runSearch() {
+    const query = input.value.trim().toLowerCase();
+    let count = 0;
+
+    cards.forEach(function (card) {
+      const text = (
+        (card.dataset.search || '') + ' ' +
+        card.textContent
+      ).toLowerCase();
+
+      const categoryMatch =
+        activeFilter === 'All' ||
+        card.dataset.category === activeFilter;
+
+      const textMatch = query === '' || text.includes(query);
+      const show = categoryMatch && textMatch;
+
+      card.hidden = !show;
+      if (show) count++;
+    });
+
+    empty.style.display = count ? 'none' : 'block';
+  }
+
+  input.addEventListener('input', runSearch);
+  input.addEventListener('search', runSearch);
+
+  clear.addEventListener('click', function () {
+    input.value = '';
+    activeFilter = 'All';
+
+    filters.forEach(function (button) {
+      button.classList.toggle(
+        'active',
+        button.dataset.filter === 'All'
+      );
+    });
+
+    runSearch();
+    input.focus();
+  });
+
+  filters.forEach(function (button) {
+    button.addEventListener('click', function () {
+      activeFilter = button.dataset.filter || 'All';
+
+      filters.forEach(function (item) {
+        item.classList.toggle('active', item === button);
       });
-      emptyState.style.display = visibleCount ? 'none' : 'block';
-    }
 
-    searchInput.addEventListener('input', filterResources);
-    clearButton.addEventListener('click', () => {
-      searchInput.value = '';
-      activeFilter = 'All';
-      filters.forEach(button => button.classList.toggle('active', button.dataset.filter === 'All'));
-      filterResources();
-      searchInput.focus();
+      runSearch();
     });
-    filters.forEach(button => button.addEventListener('click', () => {
-      activeFilter = button.dataset.filter;
-      filters.forEach(item => item.classList.toggle('active', item === button));
-      filterResources();
-    }));
-    menuButton.addEventListener('click', () => {
-      const isOpen = navLinks.classList.toggle('open');
-      menuButton.setAttribute('aria-expanded', String(isOpen));
-      menuButton.textContent = isOpen ? '✕ Close' : '☰ Menu';
-    });
-    navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-      navLinks.classList.remove('open');
-      menuButton.setAttribute('aria-expanded', 'false');
-      menuButton.textContent = '☰ Menu';
-    }));
-    document.querySelectorAll('[data-branch]').forEach(link => link.addEventListener('click', () => {
-      const branch = link.dataset.branch;
-      searchInput.value = branch === 'ECE' ? 'ECE' : branch === 'CSE' ? 'coding' : branch.toLowerCase();
-      activeFilter = 'All';
-      filters.forEach(item => item.classList.toggle('active', item.dataset.filter === 'All'));
-      filterResources();
-    }));
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+  });
+
+  runSearch();
+});
+</script>
 </body>
 </html>
